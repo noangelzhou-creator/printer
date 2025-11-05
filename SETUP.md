@@ -35,28 +35,11 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 # 依存関係のインストール
 npm install
 
-# D1データベースのマイグレーション（ローカルCloudflare D1用）
-npm run db:migrate:local
-
-# ビルド
-npm run build
-
 # 開発サーバーの起動
-npm run dev:sandbox
+npm run dev
 ```
 
-### 5. Dockerでの実行
-
-```bash
-# Dockerイメージのビルド
-docker build -t printer-app .
-
-# コンテナの起動
-docker run -p 5173:5173 --env-file .env printer-app
-
-# または docker-compose を使用
-docker-compose up -d
-```
+アプリケーションは `http://localhost:3000` で起動します。
 
 ## 初回ユーザー登録
 
@@ -92,8 +75,9 @@ WHERE user_id = 'ユーザーID';
 ### データベース接続エラー
 - `supabase_migrations.sql` が正しく実行されているか確認
 - RLSポリシーが有効化されているか確認
+- Supabaseプロジェクトが正しく起動しているか確認
 
-### Dockerコンテナが起動しない
+### 開発サーバーが起動しない
 - `.env` ファイルが存在するか確認
-- ポート5173が他のプロセスで使用されていないか確認
-- ログを確認: `docker logs printer-app`
+- ポート3000が他のプロセスで使用されていないか確認
+- `npm install` を実行して依存関係をインストール
