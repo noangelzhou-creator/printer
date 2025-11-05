@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: printer-app
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    env_file:
+      - .env
+    volumes:
+      # データベースを永続化する場合（オプション）
+      - ./data:/app/.wrangler
+    restart: unless-stopped
+    networks:
+      - webapp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  webapp-network:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local

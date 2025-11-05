@@ -165,12 +165,14 @@ cp .env.example .env
 - `supabase_migrations.sql` をSupabaseのSQLエディタで実行
 - user_rolesテーブルとRLSポリシーが作成されます
 
+3. **依存関係のインストール**
+```bash
+npm install
+```
+
 ### ローカル開発
 
 ```bash
-# 依存関係のインストール
-npm install
-
 # データベースのマイグレーション（Cloudflare D1用）
 npm run db:migrate:local
 
@@ -181,7 +183,7 @@ npm run build
 pm2 start ecosystem.config.cjs
 
 # または直接起動
-npm run dev:sandbox
+npm run dev
 
 # サービスの確認
 pm2 list
