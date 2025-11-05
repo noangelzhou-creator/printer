@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  printer-app:
+    build: .
+    container_name: printer-app
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    volumes:
+      # Optional: Mount for development
+      - ./src:/app/src
+      - ./public:/app/public
+    restart: unless-stopped

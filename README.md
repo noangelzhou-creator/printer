@@ -150,11 +150,28 @@
 2. 「部屋管理」タブで部屋情報を確認
 3. 編集・削除ボタンで管理（一部機能は実装中）
 
-## デプロイメント
+## 📋 セットアップ（重要）
+
+### 初回セットアップ
+詳細は `SETUP.md` をご覧ください。
+
+1. **環境変数の設定**
+```bash
+cp .env.example .env
+# .envファイルを編集してSupabase認証情報を設定
+```
+
+2. **Supabaseデータベースのセットアップ**
+- `supabase_migrations.sql` をSupabaseのSQLエディタで実行
+- user_rolesテーブルとRLSポリシーが作成されます
 
 ### ローカル開発
+
 ```bash
-# データベースのマイグレーション（サンプルデータも同時に投入）
+# 依存関係のインストール
+npm install
+
+# データベースのマイグレーション（Cloudflare D1用）
 npm run db:migrate:local
 
 # ビルド
@@ -162,6 +179,9 @@ npm run build
 
 # 開発サーバー起動（PM2使用）
 pm2 start ecosystem.config.cjs
+
+# または直接起動
+npm run dev:sandbox
 
 # サービスの確認
 pm2 list
@@ -172,6 +192,25 @@ pm2 stop webapp
 
 # サーバーの再起動
 pm2 restart webapp
+```
+
+### 🐳 Docker での実行
+
+```bash
+# Dockerイメージのビルド
+docker build -t printer-app .
+
+# コンテナの起動
+docker run -p 5173:5173 --env-file .env printer-app
+
+# または docker-compose を使用
+docker-compose up -d
+
+# ログの確認
+docker-compose logs -f
+
+# 停止
+docker-compose down
 ```
 
 ### Cloudflare Pagesへのデプロイ
@@ -222,13 +261,40 @@ npm run deploy:prod
 10. **エクスポート機能** - CSV/Excelへのデータ出力
 11. **ダッシュボード** - 収支の推移グラフなど
 
+## 🔐 認証機能の使用方法
+
+### 新規ユーザー登録
+1. アプリケーションにアクセス
+2. 「アカウントをお持ちでないですか？登録」をクリック
+3. メールアドレスとパスワード（6文字以上）を入力
+4. 確認メールのリンクをクリック
+
+### ログイン
+1. メールアドレスとパスワードを入力
+2. ログイン後、自動的にダッシュボードへ遷移
+
+### ユーザーロールの設定
+デフォルト: `viewer`（閲覧のみ）
+
+Editorロールに変更するには、SupabaseのSQLエディタで実行：
+```sql
+UPDATE user_roles 
+SET role = 'editor' 
+WHERE user_id = 'ユーザーID';
+```
+
+### 権限による機能制限
+- **Editor**: 全機能（閲覧・編集・削除）
+- **Viewer**: 閲覧のみ（編集ボタン非表示）
+
 ## 最終更新日
 2025年11月5日
 
 ## ステータス
-- **開発**: ✅ 完了（全機能実装済み）
-- **テスト**: ✅ 完了（ローカル動作確認済み）
-- **デプロイ**: ❌ 未実施（準備完了）
+- **開発**: ✅ 完了（認証機能含む全機能実装済み）
+- **認証**: ✅ 完了（Supabase Auth統合済み）
+- **テスト**: ⏳ 準備中（認証フローのテスト必要）
+- **デプロイ**: ❌ 未実施（Docker/Cloudflare Pages準備完了）
 
 ## 主要な変更履歴
 
