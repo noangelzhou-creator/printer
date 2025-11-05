@@ -299,14 +299,23 @@ app.get('/', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>不動産月次収支報告書システム</title>
+        <title>不動産月次収支報告書システム - 認証機能付き</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
         <div id="app"></div>
         
+        <!-- Supabase JS Client -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        
+        <!-- Axios for API calls -->
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        
+        <!-- Authentication Script (loads first) -->
+        <script src="/static/auth.js"></script>
+        
+        <!-- Main Application Script -->
         <script src="/static/app.js"></script>
     </body>
     </html>

@@ -536,10 +536,249 @@ async function deleteExpense(id) {
   }
 }
 
-// その他の関数（編集フォームなど）は必要に応じて実装
-function showContractForm() { alert('契約フォームは実装中です'); }
-function editContract(id) { alert('編集機能は実装中です'); }
-function showRoomForm() { alert('部屋フォームは実装中です'); }
-function editRoom(id) { alert('編集機能は実装中です'); }
-function deleteRoom(id) { alert('削除機能は実装中です'); }
-function editExpense(id) { alert('編集機能は実装中です'); }
+// 支出編集
+async function editExpense(id) {
+  try {
+    const response = await axios.get(`/api/properties/${currentProperty.id}/expenses?year_month=${currentYearMonth}`);
+    const expenses = response.data;
+    const expense = expenses.find(e => e.id === id);
+    
+    if (expense) {
+      showExpenseForm(expense);
+    }
+  } catch (error) {
+    console.error('支出の取得に失敗しました:', error);
+    alert('支出の取得に失敗しました');
+  }
+}
+
+// 契約フォームの表示
+function showContractForm(contract = null) {
+  const content = `
+    <form id="contractForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">部屋</label>
+        <select name="room_id" required class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+          <option value="">部屋を選択してください</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">契約者名</label>
+        <input type="text" name="contractor_name" value="${contract?.contractor_name || ''}" required
+               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">入居者名（任意）</label>
+        <input type="text" name="tenant_name" value="${contract?.tenant_name || ''}"
+               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">賃料</label>
+          <input type="number" name="rent" value="${contract?.rent || 0}" required
+                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">管理費</label>
+          <input type="number" name="management_fee" value="${contract?.management_fee || 0}" required
+                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">駐車料金</label>
+          <input type="number" name="parking_fee" value="${contract?.parking_fee || 0}" required
+                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">その他</label>
+          <input type="number" name="other_fee" value="${contract?.other_fee || 0}" required
+                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">契約開始日</label>
+          <input type="date" name="start_date" value="${contract?.start_date || ''}" required
+                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">契約終了日（任意）</label>
+          <input type="date" name="end_date" value="${contract?.end_date || ''}"
+                 class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+      </div>
+      <div>
+        <label class="flex items-center">
+          <input type="checkbox" name="is_active" ${contract?.is_active ? 'checked' : ''} value="1"
+                 class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+          <span class="ml-2 text-sm text-gray-700">有効な契約</span>
+        </label>
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button type="button" onclick="this.closest('.fixed').remove()"
+                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+          キャンセル
+        </button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          保存
+        </button>
+      </div>
+    </form>
+  `;
+  
+  showModal(contract ? '契約を編集' : '新規契約', content);
+  
+  // 部屋リストの読み込み
+  loadRoomsForContract(contract);
+  
+  document.getElementById('contractForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      room_id: parseInt(formData.get('room_id')),
+      contractor_name: formData.get('contractor_name'),
+      tenant_name: formData.get('tenant_name') || null,
+      rent: parseInt(formData.get('rent')),
+      management_fee: parseInt(formData.get('management_fee')),
+      parking_fee: parseInt(formData.get('parking_fee')),
+      other_fee: parseInt(formData.get('other_fee')),
+      start_date: formData.get('start_date'),
+      end_date: formData.get('end_date') || null,
+      is_active: formData.get('is_active') ? 1 : 0
+    };
+    
+    try {
+      if (contract) {
+        await axios.put(`/api/contracts/${contract.id}`, data);
+      } else {
+        await axios.post('/api/contracts', data);
+      }
+      document.querySelector('.fixed').remove();
+      switchTab('contracts');
+    } catch (error) {
+      console.error('保存に失敗しました:', error);
+      alert('保存に失敗しました');
+    }
+  });
+}
+
+// 契約用の部屋リスト読み込み
+async function loadRoomsForContract(contract) {
+  try {
+    const response = await axios.get(`/api/properties/${currentProperty.id}/rooms`);
+    const rooms = response.data;
+    const select = document.querySelector('#contractForm select[name="room_id"]');
+    
+    rooms.forEach(room => {
+      const option = document.createElement('option');
+      option.value = room.id;
+      option.textContent = `${room.room_number} (${room.floor})`;
+      if (contract && contract.room_id === room.id) {
+        option.selected = true;
+      }
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('部屋の読み込みに失敗しました:', error);
+  }
+}
+
+// 契約編集
+async function editContract(id) {
+  try {
+    const response = await axios.get(`/api/properties/${currentProperty.id}/active-contracts`);
+    const contracts = response.data;
+    const contract = contracts.find(c => c.id === id);
+    
+    if (contract) {
+      showContractForm(contract);
+    }
+  } catch (error) {
+    console.error('契約の取得に失敗しました:', error);
+    alert('契約の取得に失敗しました');
+  }
+}
+
+// 部屋フォームの表示
+function showRoomForm(room = null) {
+  const content = `
+    <form id="roomForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">部屋番号</label>
+        <input type="text" name="room_number" value="${room?.room_number || ''}" required
+               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+               placeholder="例: 201">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">階数</label>
+        <input type="text" name="floor" value="${room?.floor || ''}" required
+               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+               placeholder="例: 2階">
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button type="button" onclick="this.closest('.fixed').remove()"
+                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+          キャンセル
+        </button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          保存
+        </button>
+      </div>
+    </form>
+  `;
+  
+  showModal(room ? '部屋を編集' : '部屋を追加', content);
+  
+  document.getElementById('roomForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      property_id: currentProperty.id,
+      room_number: formData.get('room_number'),
+      floor: formData.get('floor')
+    };
+    
+    try {
+      if (room) {
+        await axios.put(`/api/rooms/${room.id}`, data);
+      } else {
+        await axios.post('/api/rooms', data);
+      }
+      document.querySelector('.fixed').remove();
+      switchTab('rooms');
+    } catch (error) {
+      console.error('保存に失敗しました:', error);
+      alert('保存に失敗しました');
+    }
+  });
+}
+
+// 部屋編集
+async function editRoom(id) {
+  try {
+    const response = await axios.get(`/api/properties/${currentProperty.id}/rooms`);
+    const rooms = response.data;
+    const room = rooms.find(r => r.id === id);
+    
+    if (room) {
+      showRoomForm(room);
+    }
+  } catch (error) {
+    console.error('部屋の取得に失敗しました:', error);
+    alert('部屋の取得に失敗しました');
+  }
+}
+
+// 部屋削除
+async function deleteRoom(id) {
+  if (confirm('この部屋を削除しますか？関連する契約も削除されます。')) {
+    try {
+      await axios.delete(`/api/rooms/${id}`);
+      switchTab('rooms');
+    } catch (error) {
+      console.error('削除に失敗しました:', error);
+      alert('削除に失敗しました');
+    }
+  }
+}
